@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <a href="/" class="back-link">⬅️ Back</a>
+
+        <h1>Model Evaluation Against Adversarial Attacks</h1>
+      
+        <div *ngIf="errorMessage" class="error-message">
+          <p>There was an error connecting to backend... check API connection</p>
+        </div>
+      
+        <div *ngIf="attackData.length === 0" class="loading">
+          <p>Loading attack data...</p>
+        </div>
+      
+        <div *ngFor="let attack of attackData; let i = index" class="attack-card">
+          <div class="attack-title-container">
+            <div class="attack-title" (click)="toggleEvaluation(i)">
+              {{ attack.attackName }} - 
+              <span 
+                [ngClass]="{'status-green': attack.status === 'Evaluated and Adjusted'}">
+                {{ attack.status }}
+              </span>
+            </div>
+            <button class="download-button" (click)="downloadEvaluation(attack.attackName)">Download</button>
+          </div>
+      
+          <!-- Show evaluation details if visible -->
+          <div *ngIf="visibleEvaluations[i]">
+            <div *ngIf="attack.evaluation && attack.evaluation.length > 0; else noEvaluation">
+              <!-- Loop through each evaluation, excluding the Confusion Matrix -->
+              <ng-container *ngFor="let entry of attack.evaluation">
+                <div *ngIf="!isConfusionMatrix(entry)">
+                  <div *ngFor="let key of objectKeys(entry)">
+                    <!-- display using 4 cases for each value-->
+                    <div><strong>{{ key }}:</strong> {{ entry[key] | number: '1.4-4' }}</div>
+                  
+                  </div>
+                </div>
+              </ng-container>
+      
+              <!-- Display Confusion Matrix only if it exists in the evaluation -->
+              <div *ngIf="hasConfusionMatrix(attack.evaluation)">
+                <strong>Confusion Matrix:</strong>
+                <table border="1">
+                  <tr *ngFor="let row of getConfusionMatrix(attack.evaluation)">
+                    <td *ngFor="let cell of row">{{ formatValue(cell) }}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <!-- If no confusion matrix exists -->
+              <div *ngIf="!hasConfusionMatrix(attack.evaluation)">
+                <p>Confusion Matrix: Not Available</p>
+              </div>
+            </div>
+      
+            <ng-template #noEvaluation>
+              <p>No evaluation data available.</p>
+            </ng-template>
+          </div>
+        </div>
+        <div *ngIf="reportAvailable" class="footer">
+          <button class="execute-button" (click)="downloadReport()">Download Report</button>
+        </div>
+      </div>
+
+      
+      
+      
+      
+      
+  </body>
+</html>

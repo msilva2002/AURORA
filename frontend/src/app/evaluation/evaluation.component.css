@@ -1,0 +1,130 @@
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.status-green {
+  color: green;
+  font-weight: bold;
+}
+
+
+.container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  max-width: 1100px;
+  width: 100%;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.footer {
+  margin: 0 auto;
+  text-align: center;}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.attack-card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #f9f9f9;
+}
+
+.attack-title {
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.evaluation-content {
+  margin-top: 10px;
+  padding: 5px;
+  border-top: 1px solid #ddd;
+}
+
+.error-message {
+  color: red;
+}
+
+.loading {
+  font-size: 16px;
+  color: grey;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+
+td {
+  background-color: #f9f9f9;
+}
+.attack-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attack-title {
+  cursor: pointer;
+}
+
+.download-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.download-button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+.execute-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Button hover effect */
+.execute-button:hover {
+  background-color: #0056b3;
+}

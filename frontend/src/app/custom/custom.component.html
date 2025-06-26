@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+      </head>
+
+    <body>
+        <div class="container">
+          <a href="/" class="back-link">⬅️ Back</a>
+            <h1>Custom Adversarial Attack Evaluation</h1>
+          
+            <!-- File Upload Section -->
+            <div class="upload-section">
+              <!-- Model File Selection -->
+              <div class="file-select" (click)="modelInput.click()">
+                <p>{{ selectedModelFile?.name || 'Click to select your model file (.joblib)' }}</p>
+                <input #modelInput type="file" accept=".joblib" (change)="handleFileInput($event, 'model')" hidden>
+              </div>
+          
+              <!-- Dataset File Selection -->
+              <div class="file-select" (click)="datasetInput.click()">
+                <p>{{ selectedDatasetFile?.name || 'Click to select your dataset file (.csv)' }}</p>
+                <input #datasetInput type="file" accept=".csv" (change)="handleFileInput($event, 'dataset')" hidden>
+              </div>
+
+              <!-- Perturbed Dataset File Selection -->
+                <div class="file-select" (click)="perturbedInput.click()">
+                <p>{{ selectedPerturbedDatasetFile?.name || 'Click to select your perturbed dataset file (.csv)' }}</p>
+                <input #perturbedInput type="file" accept=".csv" (change)="handleFileInput($event, 'perturbed_dataset')" hidden>
+                </div>
+
+                <div class="file-select" (click)="targetInput.click()">
+                <p>{{ selectedTargetFile?.name || 'Click to select your target file (.csv)' }}</p>
+                <input #targetInput type="file" accept=".csv" (change)="handleFileInput($event, 'target')" hidden>
+              </div>
+            </div>
+
+            <button class="execute-button" (click)="startEvaluation()">Execute Evaluation</button>
+          
+          </div> 
+    </body>
+</html>

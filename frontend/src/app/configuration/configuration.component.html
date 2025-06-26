@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">⬅️ Back</a>
+    <h1>Configuration of Adversarial Attacks</h1>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message">
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="!configurationData || configurationData.length === 0" class="loading">
+      <p>Loading configuration data...</p>
+    </div>
+
+    <!-- Configuration Table -->
+    <div *ngIf="configurationData.length > 0">
+      <table class="config-table">
+        <tbody>
+          <ng-container *ngFor="let item of configurationData; let i = index">
+            <!-- Row with attack name and toggle button -->
+            <tr>
+              <td colspan="2">
+                <strong *ngIf="item.attackName; else general" (click)="item.expanded = !item.expanded" class="config-title">{{ item.attackName }}</strong>
+                <ng-template #general><em>General Config</em></ng-template>
+    
+                <button class="toggle-button align-right" (click)="item.expanded = !item.expanded">
+                  {{ item.expanded ? '⬆️' : '⬇️' }}
+                </button>
+              </td>
+            </tr>
+    
+            <!-- Expanded details -->
+            <tr *ngIf="item.expanded">
+              <td colspan="2">
+                <table class="expanded-table">
+                  <thead *ngIf="hasNonNestedValues(item)">
+                    <tr>
+                      <th>Property</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <thead *ngIf="!hasNonNestedValues(item)">
+                    <tr>
+                      <th> Patterns <span class="info-icon" title="If the feature is dividen into multiple rows starting with the same name you can add them all by typing the prefix it and adding a * at the end (i.e. &quot;feature_prefix*&quot;)">ℹ️</span></th>
+                    </tr>
+                  <tbody>
+                    <ng-container *ngFor="let key of objectKeys(item)">
+                      <ng-container *ngIf="key !== 'attackName' && key !== 'expanded'">
+                        
+                        <!-- Simple key-value row -->
+                        <tr *ngIf="!isArrayOfObjects(item[key])">
+                          
+                          <td style="width: 30%;">{{ key }}</td>
+                          <td style="width: 70%;">
+                            <div
+                              [attr.spellcheck]="false"
+                              [attr.contenteditable]="item[key] !== undefined"
+                              [innerText]="item[key] !== undefined ? item[key] : '-'"
+                              (blur)="item[key] !== undefined && handleBlur(i, key, $event)"
+                              class="editable-cell-simple"
+                              [class.locked]="item[key] === undefined">
+                            </div>
+                          </td>
+                        </tr>
+    
+                        <!-- Nested table for arrays of objects -->
+                        <tr *ngIf="isArrayOfObjects(item[key])">
+                          <td colspan="2">
+                            <div class="nested-table-wrapper">
+                              <table class="nested-table">
+                                <thead>
+                                  <tr>
+                                    <th *ngFor="let col of getAllKeys(item[key])" class="column-limited">{{ col }}</th>
+                                    <th>Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr *ngFor="let obj of item[key]; let objIndex = index">
+                                    <td *ngFor="let subKey of getAllKeys(item[key])" class="column-limited">
+                                      <div
+                                        [attr.spellcheck]="false"
+                                        [attr.contenteditable]="subKey !== 'type' && obj[subKey] !== undefined"
+                                        [innerText]="obj[subKey] !== undefined ? obj[subKey] : '-'"
+                                        (blur)="subKey !== 'type' && obj[subKey] !== undefined && handleNestedBlur(i, key, objIndex, subKey, $event)"
+                                        class="editable-cell"
+                                        [class.locked]="subKey === 'type' || obj[subKey] === undefined">
+                                      </div>
+                                    </td>
+                                    <td class="action-buttons">
+                                      <button (click)="removeNestedRow(i, key, objIndex)" class="action-btn" [disabled]="item[key].length <= 1">❌</button>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                        
+                              <div class="row-add-buttons">
+                                <button (click)="addCategoricalRow(i, key)" class="icon-button">Add Categorical</button>
+                                <button (click)="addNumericalRow(i, key)" class="icon-button">Add Numerical</button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        
+                        
+                        
+    
+                      </ng-container>
+                    </ng-container>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+    
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+    
+
+    <!-- add empty space-->
+    <div style="height: 20px;"></div>
+    <!-- Buttons -->
+    <div>
+      <button class="execute-button" (click)="saveConfiguration()">Save Configuration</button>
+      <div style="width: 10px; display: inline-block;"></div>
+      <button class="execute-button" (click)="resetConfiguration()">Reset Configuration</button>
+      <div style="width: 10px; display: inline-block;"></div>
+      <button class="execute-button" (click)="downloadConfiguration()">Download Configuration</button>
+      <div style="width: 10px; display: inline-block;"></div>
+      <input type="file" (change)="uploadConfiguration($event)" style="display: none;" #fileInput />
+      <button class="execute-button" (click)="fileInput.click()">Upload Configuration</button>
+    </div>
+  </div>
+</body>
+</html>

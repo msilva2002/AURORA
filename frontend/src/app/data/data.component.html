@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+
+    <body>
+        <div class="container">
+            <a href="/" class="back-link">⬅️ Back</a>
+            <h1>Dataset Feature Setup
+            </h1>
+        
+            <!-- Error Message -->
+            <div *ngIf="errorMessage" class="error-message">
+                <p>{{ errorMessage }}</p>
+            </div>
+        
+            <!-- Loading State -->
+            <div *ngIf="!configurationData || configurationData.length === 0" class="loading">
+                <p>Loading configuration data...</p>
+            </div>
+        
+            <table class="config-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Categorical feature <span class="info-icon" title="If the feature is dividen into multiple rows starting with the same name you can add them all by typing the prefix it and adding a * at the end (i.e. &quot;feature_prefix*&quot;)">ℹ️</span></th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let feature of configurationData[0]?.categorical_features; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      <div
+                        [attr.spellcheck]="false"
+                        class="editable-cell"
+                        contenteditable="true"
+                        [innerText]="feature.name"
+                        (blur)="updateFeatureName(i, $event)">
+                      </div>
+                    </td>
+                    <td>
+                      <button class="icon-button" (click)="removeFeature(i)">❌</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="margin-top: 10px; margin-left: 20px;">
+                <button class="icon-button" (click)="addFeature()">➕ Add Feature</button>
+              </div>
+
+              <div style="height: 20px;"></div>
+            <!-- button to saveConfiguration-->
+            <div>
+                <button class="execute-button" (click)="saveConfiguration()">Save Configuration</button>
+            <!--add space in between-->
+                <div style="width: 10px; display: inline-block;"></div>
+            <!-- button to reset-->
+                <button class="execute-button" (click)="resetConfiguration()">Reset Configuration</button>
+                <div style="width: 10px; display: inline-block;"></div>
+            <!-- button to download-->
+                <button class="execute-button" (click)="downloadConfiguration()">Download Configuration</button>
+
+                <div style="width: 10px; display: inline-block;"></div>
+            <!-- button to upload-->
+                <input type="file" (change)="uploadConfiguration($event)" style="display: none;" #fileInput />
+                <button class="execute-button" (click)="fileInput.click()">Upload Configuration</button>
+            </div>
+
+            <!--button to download data-->
+            <!--button class="execute-button" (click)="downloadConfiguration()">Download Configuration</button-->
+        </div>
+            
+
+    </body>
+</html>
