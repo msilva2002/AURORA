@@ -4,15 +4,17 @@ def get_features(df, selected_features):
     # check if the selected features have a "*" in them
     # if they do, then we need to get all the features that have that prefix
     # if not, then we just return the selected features
-
     if selected_features is None:
         return list()
-
     features = set()  # Using a set to avoid duplicate columns
-    selected_features = selected_features.split(",")  # Split the string by ','
+    if "," in selected_features:
+        selected_features = selected_features.split(",")  # Split the string by ','
+    if not isinstance(selected_features, list):
+        selected_features = [selected_features]
     for feature in selected_features:
+        feature = feature.strip()
         if "*" in feature:
-            prefix = feature.rstrip("*")  # Remove '*' to get the prefix
+            prefix = feature[:-1] if feature.endswith("*") else feature
             matches = [col for col in df.columns if col.startswith(prefix)]
             features.update(matches)
         else:
@@ -45,8 +47,12 @@ def apply_constraints(data, categorical_features, integer_features):
             numeric_group = data[cols].apply(lambda col: pd.to_numeric(col, errors='coerce'))
             numeric_group = numeric_group.fillna(0)
             
-            max_col = numeric_group.abs().idxmax(axis=1)
-
+            try:
+                max_col = numeric_group.abs().idxmax(axis=1)
+            except ValueError as e:
+                # no value is present in the cols
+                # first position is selected
+                max_col = pd.Series(cols[0], index=data.index)
             one_hot = pd.DataFrame(0, index=data.index, columns=cols)
             for idx in data.index:
                 one_hot.at[idx, max_col[idx]] = 1
