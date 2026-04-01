@@ -11,3 +11,4 @@ xgboost
 a2pm
 flask-cors
 catboost
+torch
