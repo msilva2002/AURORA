@@ -6,20 +6,18 @@ from art.attacks.evasion import ProjectedGradientDescent
 import time
 import pandas as pd
 from attacks.attack_error_handler import AttackErrorHandler
-from config.configuration import Configuration
 
 # Note: This method is not ready to be used, for there are some issues with the ART library and the targeted attack.
 
 @zope.interface.implementer(AttackI) 
 class ProjectedGradientDescentAttack:
     _attackName = "ProjectedGradientDescent"
-    def execute(self, modeldata: ModelData) -> PerturbedData:
+    def execute(self, modeldata: ModelData, config) -> PerturbedData:
         data = modeldata.get_dataset()
         model = modeldata.get_art_classifier()
         try:
-            data = data.to_numpy()
-            config = Configuration().get_config(attackName=self._attackName)
-            attack = ProjectedGradientDescent(estimator=model, targeted=False, verbose=True, **config)
+            data = data.compute().to_numpy()
+            attack = ProjectedGradientDescent(estimator=model, targeted=False, verbose=False, **config)
             start = time.time()
             adversarial_data = attack.generate(x=data)
             end = time.time()

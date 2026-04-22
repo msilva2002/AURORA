@@ -2,26 +2,24 @@ from domain_data.model_data import ModelData
 from typing import List
 from domain_data.perturbed_data import PerturbedData
 
-from managers.status_manager import StatusManager
-
 class ExecuteAttackService:
     def __init__(self, attackClasses, attackClassesTargeted):
         self.classes = []
-        self.statusManager = StatusManager()
         for attackClass in attackClasses + attackClassesTargeted:
             self.classes.append(attackClass())
-            self.statusManager.update_load(attackClass()._attackName)
 
         
-    def execute(self, modelData: ModelData, attackClass)->PerturbedData:
-        self.statusManager.update_run(attackClass._attackName)
-        perturbed_data : PerturbedData = attackClass.execute(modelData)
+    def execute(self, modelData: ModelData, attackClass, config)->PerturbedData:
+        perturbed_data : PerturbedData = attackClass.execute(modelData, config)
         if perturbed_data.error == True:
-            self.statusManager.update_error(attackClass._attackName, perturbed_data.message)
+            #self.statusManager.update_error(attackClass._attackName, perturbed_data.message)
+            print(f"Error while executing {attackClass._attackName}: {perturbed_data.message}")
         else:
             perturbation = perturbed_data.get_perturbations()
             perturbation.columns = modelData.get_columns()
-            self.statusManager.update_finish(attackClass._attackName, perturbation)
+            from repositories.export_repository import ExportRepository
+            ExportRepository().export_csv(perturbation, f"datasets/{attackClass._attackName}.csv")
+            #self.statusManager.update_finish(attackClass._attackName, perturbation)
         return perturbed_data
 
 

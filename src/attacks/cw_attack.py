@@ -6,18 +6,16 @@ from art.attacks.evasion import CarliniL2Method
 import time
 import pandas as pd
 from attacks.attack_error_handler import AttackErrorHandler
-from config.configuration import Configuration
 
 @zope.interface.implementer(AttackI) 
 class CarliniWagnerAttack:
     _attackName = "CarliniWagner"
-    def execute(self, modeldata: ModelData) -> PerturbedData:
+    def execute(self, modeldata: ModelData, config) -> PerturbedData:
         data = modeldata.get_dataset()
         model = modeldata.get_art_classifier()
         try:
-            data = data.to_numpy()
-            config = Configuration().get_config(attackName=self._attackName)
-            attack = CarliniL2Method(classifier=model, targeted=False, verbose=True, **config)
+            data = data.compute().to_numpy()
+            attack = CarliniL2Method(classifier=model, targeted=False, verbose=False, **config)
             start = time.time()
             adversarial_data = attack.generate(x=data)
             end = time.time()

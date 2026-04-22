@@ -3,7 +3,12 @@ import math
 import pandas as pd
 import numpy as np
 from typing import List
-PENALTY = 2
+PENALTY = 10
+
+def get_penalty(original, categorical_features : List[str]):
+    threshold = calculate_threshold(original, categorical_features)
+    penalty = threshold * 0.1
+    return penalty    
 
 def calculate_hamming_distance_one_row(p1, p2):
     p1 = np.atleast_1d(p1)
@@ -15,7 +20,7 @@ def calculate_hamming_distance_one_row(p1, p2):
     hamming_dist = hamming_dist*len(p1)
     return hamming_dist
 
-def calculate_hamming_distance(p1, p2):
+def calculate_hamming_distance(p1, p2, penalty):
 
     p1 = np.atleast_1d(p1)
     p2 = np.atleast_1d(p2)
@@ -24,13 +29,13 @@ def calculate_hamming_distance(p1, p2):
 
     # assuming p2 is always the perturbed
     invalid_count = sum((x not in {0, 1}) for x in p2)
-    hamming_dist += invalid_count * PENALTY
+    hamming_dist += invalid_count * penalty
 
     invalid_count = int(sum(x != 0 for x in p2) > 1)
-    hamming_dist += invalid_count * PENALTY
+    hamming_dist += invalid_count * penalty
 
     invalid_count = max(0, all(x == 0 for x in p2))
-    hamming_dist += invalid_count * PENALTY
+    hamming_dist += invalid_count * penalty
 
     # normalization
     hamming_dist = hamming_dist*len(p1)
@@ -51,12 +56,13 @@ def calculate_euclidian_distance(p1, p2):
 def calculate_distance(original, perturbed, categorical_features : List[str]):
     perturbed.columns = original.columns
     distance = []
+    penalty = get_penalty(original, categorical_features)
     for categorical in categorical_features:
         col_init = original[categorical].values
         col_pert = perturbed[categorical].values
 
         # List comprehension for speed
-        dist = [calculate_hamming_distance(p1, p2) for p1, p2 in zip(col_init, col_pert)]
+        dist = [calculate_hamming_distance(p1, p2, penalty) for p1, p2 in zip(col_init, col_pert)]
         distance.append(np.median(sorted(dist)))
 
     numerical_features = list(set(original.columns) - {item for sublist in categorical_features for item in sublist})
@@ -68,7 +74,6 @@ def calculate_distance(original, perturbed, categorical_features : List[str]):
         dist = [calculate_euclidian_distance(p1, p2) for p1, p2 in zip(col_init, col_pert)]
 
         distance.append(np.median(sorted(dist)))
-
     return sum(distance)
 
 def calculate_threshold(original, categorical_features : List[str]):

@@ -10,6 +10,7 @@ import numpy as np
 from math import pi
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
+import textwrap
 
 class ImageGenerator:
     def __init__(self, folder_path: str):
@@ -38,6 +39,11 @@ class ImageGenerator:
         ax.plot(angles, values, linewidth=1, linestyle='solid', color='green', zorder=4, label='Robustness')
         # add fill to the area in the middle
         ax.fill(angles, values, color='green', alpha=0.2, zorder=3)  # Fill under perturbed
+
+        #wrapped = ['\n'.join(textwrap.wrap(l, width=15)) for l in labels]
+        labels = [f"{tick}\n({int(val)})" for tick, val in zip(xticks, values)]
+        ax.set_xticklabels(labels, fontsize=10)
+
         ExportRepository().export_plot(fig, self.folder_path + title)
 
     def generate_categorical(self, evalData:EvaluationData, modelData : ModelData, feature_combination:List[str], figure_number:int):
@@ -78,20 +84,26 @@ class ImageGenerator:
         angles += angles[:1]  # Complete the loop
 
         results += results[:1]  # Complete the loop
-        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={'projection': 'polar'})
+        fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={'projection': 'polar'})  # was (8, 8)
         ax.set_theta_offset(pi / 2)
         ax.set_theta_direction(-1)
         
-        plt.xticks(angles[:-1], xticks, fontsize=10)
+        plt.xticks(angles[:-1], xticks, fontsize=17)
+
 
         ax.plot(angles, results, linewidth=1, linestyle='solid')
-            
+        ax.tick_params(axis='x', pad=25)
         plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
-        ax.set_title(title, fontsize=12)
+        ax.set_title(title, fontsize=20, pad=20)
+
+        labels = [f"{tick}\n({int(val)})" for tick, val in zip(xticks, results)]
+        wrapped = ['\n'.join(textwrap.wrap(l, width=15)) for l in labels]
+        ax.set_xticklabels(wrapped, fontsize=17)
+
         #plt.show()
         return fig
 
-    
+    '''
     def create_category_min_max_avg_plot(self, df, category, xticks):
         number_of_plots = 3
         fig, axes = plt.subplots(1, number_of_plots, figsize=(8 * 2, 8), 
@@ -134,6 +146,74 @@ class ImageGenerator:
         self._set_axes_style_category(ax[i], angles, values, xticks)
         ax[i].set_title("Value Counts", fontsize=12)
 
+        return fig
+        '''
+    
+    def create_category_min_max_avg_plot(self, df, category, xticks):
+        number_of_plots = 3
+        fig, axes = plt.subplots(1, number_of_plots, figsize=(10 * number_of_plots, 10), 
+                            subplot_kw={'projection': 'polar'}, sharex=False, sharey=False)
+        
+        ax = np.ravel(axes)
+
+        max_vals = df[category].max()
+        max_vals = max_vals.tolist()
+        max_vals += max_vals[:1]
+
+        min_vals = df[category].min()
+        min_vals = min_vals.tolist()
+        min_vals += min_vals[:1]
+
+        average = df[category].mean()
+        average = average.tolist()
+        average += average[:1]
+
+        angles = np.linspace(0, 2 * np.pi, len(category), endpoint=False).tolist()
+        angles += angles[:1]
+
+        # max and min
+        i = 0
+        self._set_axes_style_max_min(ax[i], "Max", xticks, max_vals, angles)
+        self._set_axes_style_max_min(ax[i], "Min", xticks, min_vals, angles)
+        ax[i].set_title("Max and Min Values", fontsize=20, pad=20)
+        ax[i].fill(angles, max_vals, color='green', alpha=0.2)
+        ax[i].fill(angles, min_vals, color='white', alpha=1.0)
+        ax[i].tick_params(axis='x', pad=25)  # push labels outward
+
+        # average
+        i = 1
+        self._set_axes_style_category(ax[i], angles, average, xticks)
+        ax[i].set_title("Average Values", fontsize=20, pad=20)
+        ax[i].tick_params(axis='x', pad=25)
+
+        # value counts
+        i = 2
+        category_counts = np.count_nonzero(df[category].values, axis=0)
+        values = list(category_counts)
+        values += values[:1]
+        self._set_axes_style_category(ax[i], angles, values, xticks)
+        ax[i].set_title("Value Counts", fontsize=20, pad=20)
+        ax[i].tick_params(axis='x', pad=25)
+
+        # wrap long tick labels to avoid overlap
+        #for axis in ax:
+        #    labels = [label.get_text() for label in axis.get_xticklabels()]
+        #    wrapped = ['\n'.join(textwrap.wrap(l, width=10)) for l in labels]
+        #    axis.set_xticklabels(wrapped, fontsize=17, fontweight='bold')
+
+        # wrap long tick labels to avoid overlap
+        value_sets = [
+            [f"{max(mx, mn):.1f} / {min(mx, mn):.1f}" for mx, mn in zip(max_vals[:-1], min_vals[:-1])],
+            [f"{v:.1f}" for v in average[:-1]],
+            [f"{v}" for v in values[:-1]],
+        ]
+
+        for axis, vals in zip(ax, value_sets):
+            labels = [f"{tick}\n({val})" for tick, val in zip(xticks, vals)]
+            wrapped = ['\n'.join(textwrap.wrap(l, width=15)) for l in labels]
+            axis.set_xticklabels(wrapped, fontsize=17)
+
+        fig.tight_layout(pad=4.0)
         return fig
 
 
@@ -211,7 +291,7 @@ class ImageGenerator:
         ax.set_theta_offset(pi / 2)
         ax.set_theta_direction(-1)
         
-        plt.xticks(angles[:-1], columns, fontsize=10)
+        plt.xticks(angles[:-1], columns, fontsize=17)
 
         max_val = max(max(df_init_scaled), max(df_perturbed_scaled))
         min_val = min(min(df_init_scaled), min(df_perturbed_scaled))
@@ -232,7 +312,6 @@ class ImageGenerator:
         ax.fill(angles, df_perturbed_scaled, color='green', alpha=0.2, zorder=3)  # Fill under perturbed
             
         plt.legend(loc='upper right')
-        plt.title(title, fontsize=12)
+        plt.title(title, fontsize=20)
         #plt.show()
         return fig
-

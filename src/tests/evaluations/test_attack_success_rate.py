@@ -17,7 +17,7 @@ class TestAttackSuccessRate(unittest.TestCase):
         print("Testing Attack Success Rate")
         evaluationData : EvaluationData = AttackSuccessRate().execute(self.evalData)
         self.assertEqual(evaluationData.get_evaluation().Evaluation_Name[0], "Attack Success Rate")
-        self.assertEqual(evaluationData.get_evaluation().Value[0], 0.2)
+        self.assertEqual(evaluationData.get_evaluation().Value[0], 2/9)
 
         self.assertNotEqual(evaluationData.get_evaluation().Evaluation_Name[0], "Clean Accuracy")
         self.assertNotEqual(evaluationData.get_evaluation().Value[0], 0.7)

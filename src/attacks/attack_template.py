@@ -3,7 +3,6 @@ from attacks.attack_error_handler import AttackErrorHandler
 from attacks.attack_interface import AttackI
 from domain_data.model_data import ModelData
 from domain_data.perturbed_data import PerturbedData
-from config.configuration import Configuration
 import time
 
 @zope.interface.implementer(AttackI) 

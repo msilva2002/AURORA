@@ -6,13 +6,12 @@ from a2pm import A2PMethod
 import time
 import pandas as pd
 from attacks.attack_error_handler import AttackErrorHandler
-from config.configuration import Configuration
 from utils.a2pm_pattern_util import get_patterns
 
 @zope.interface.implementer(AttackI) 
 class A2PMAttackTargeted:
     _attackName = "A2PMTargeted"
-    def execute(self, modeldata: ModelData) -> PerturbedData:
+    def execute(self, modeldata: ModelData, config) -> PerturbedData:
         data = modeldata.get_dataset()
         labels = modeldata.get_labels()
         columns = modeldata.get_columns()
@@ -25,7 +24,6 @@ class A2PMAttackTargeted:
                 raise Exception("Target data is required for this attack.")
             y_target = target.squeeze()
 
-            config = Configuration().get_config(attackName=self._attackName)
             pattern = get_patterns(data, config["patterns"])
             attack = A2PMethod(pattern=pattern, seed=42)
             attack = attack.fit(X=data, y=labels)

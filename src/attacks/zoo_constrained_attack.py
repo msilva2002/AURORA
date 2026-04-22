@@ -7,22 +7,20 @@ import time
 import pandas as pd
 from attacks.attack_error_handler import AttackErrorHandler
 from utils.utils import apply_constraints
-from config.configuration import Configuration
 
 @zope.interface.implementer(AttackI) 
 class ZerothOrderOptimizationConstrainedAttack:
     _attackName = "ZerothOrderOptimizationConstrained"
-    def execute(self, modeldata: ModelData) -> PerturbedData:
+    def execute(self, modeldata: ModelData, config) -> PerturbedData:
         data = modeldata.get_dataset()
         columns = modeldata.get_columns()
         model = modeldata.get_art_classifier()
         try:
-            config = Configuration().get_config(attackName=self._attackName)
             categorical_features = config.get("categorical_features", None)
             integer_features = config.get("integer_features", None)
-            data = data.to_numpy()
+            data = data.compute().to_numpy()
             config = {k: v for k, v in config.items() if k not in ['categorical_features', 'integer_features']}
-            attack = ZooAttack(classifier=model, verbose=True, **config)
+            attack = ZooAttack(classifier=model, verbose=False, **config)
             start = time.time()
             adversarial_data = attack.generate(x=data)
             adversarial_data = pd.DataFrame(adversarial_data, columns=columns)

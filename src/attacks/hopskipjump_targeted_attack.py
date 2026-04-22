@@ -6,19 +6,17 @@ from art.attacks.evasion import HopSkipJump
 import time
 import pandas as pd
 from attacks.attack_error_handler import AttackErrorHandler
-from config.configuration import Configuration
 
 @zope.interface.implementer(AttackI) 
 class HopSkipJumpAttackTargeted:
     _attackName = "HopSkipJumpTargeted"
-    def execute(self, modeldata: ModelData) -> PerturbedData:
+    def execute(self, modeldata: ModelData, config) -> PerturbedData:
         data = modeldata.get_dataset()
         model = modeldata.get_art_classifier()
         target = modeldata.get_target()
         try:
-            data = data.to_numpy()
-            config = Configuration().get_config(attackName=self._attackName)
-            attack = HopSkipJump(classifier=model, targeted=True, verbose=True, **config)
+            data = data.compute().to_numpy()
+            attack = HopSkipJump(classifier=model, targeted=True, verbose=False, **config)
             start = time.time()
             adversarial_data = attack.generate(x=data,y=target)
             end = time.time()

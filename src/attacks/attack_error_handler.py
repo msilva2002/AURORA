@@ -9,6 +9,6 @@ class AttackErrorHandler:
         if "classifier" in str(error).lower():
             return PerturbedData(attackName=attackName, perturbations=pd.DataFrame(), run_time=0, targeted=targeted, error=True, message="Model is not compatible with attack.")
         if "reduce the number of parallelcoordinate updates `nb_parallel`" in str(error).lower():
-            return PerturbedData(attackName=attackName, perturbations=pd.DataFrame(), run_time=0, targeted=targeted, error=True, message="A lower value for nb_parallel is required.")
+            return PerturbedData(attackName=attackName, perturbations=pd.DataFrame(), run_time=0, targeted=targeted, error=True, message="A lower value for nb_parallel is required. Use at most the same number of features.")
         else:
-            return PerturbedData(attackName=attackName, perturbations=pd.DataFrame(), run_time=0, targeted=targeted, error=True, message="An unknown error occurred." + str(error))
+            return PerturbedData(attackName=attackName, perturbations=pd.DataFrame(), run_time=0, targeted=targeted, error=True, message="An unknown error occurred." + str(error) + str(attackName))

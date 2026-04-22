@@ -28,19 +28,19 @@ class RobustnessCalculator:
 
             # Handle Attack Success Rate (for targeted attacks)
             if evaluation.is_targeted():
-                name = "Da " + attackNameASR if AttackSuccessRate.adjustable else attackNameASR
-                value = evalData.loc[evalData['Evaluation_Name'] == name, 'Value'].values
+                imageNameASR = "Distance Adjusted " + attackNameASR if AttackSuccessRate.adjustable else attackNameASR
+                value = evalData.loc[evalData['Evaluation_Name'] == imageNameASR, 'Value'].values
                 attackSuccessRate.append(value[0] if value.size > 0 else 0)
 
             # Handle Misclassification Rate (for untargeted attacks)
             else:
-                name = "Da " + attackNameMR if MisclassificationRate.adjustable else attackNameMR
-                value = evalData.loc[evalData['Evaluation_Name'] == name, 'Value'].values
+                imageNameMR = "Distance Adjusted " + attackNameMR if MisclassificationRate.adjustable else attackNameMR
+                value = evalData.loc[evalData['Evaluation_Name'] == imageNameMR, 'Value'].values
                 misclassificationRate.append(value[0] if value.size > 0 else 0)
 
             # Handle Attack Deterioration (for all attacks)
-            name = "Da " + attackNameAD if AttackDeterioration.adjustable else attackNameAD
-            value = evalData.loc[evalData['Evaluation_Name'] == name, 'Value'].values
+            imageNameAD = "Distance Adjusted " + attackNameAD if AttackDeterioration.adjustable else attackNameAD
+            value = evalData.loc[evalData['Evaluation_Name'] == imageNameAD, 'Value'].values
             attackDeterioration.append(value[0] if value.size > 0 else 0)
 
         # If no data collected, fallback to [0]
@@ -63,9 +63,9 @@ class RobustnessCalculator:
 
         # Create pandas DataFrame with the **final values**
         results = pd.DataFrame([
-            {"Evaluation_Name": attackNameASR, "Value": attackSuccessRate_final},
-            {"Evaluation_Name": attackNameMR, "Value": misclassificationRate_final},
-            {"Evaluation_Name": attackNameAD, "Value": attackDeterioration_final}
+            {"Evaluation_Name": imageNameASR, "Value": attackSuccessRate_final},
+            {"Evaluation_Name": imageNameMR, "Value": misclassificationRate_final},
+            {"Evaluation_Name": imageNameAD, "Value": attackDeterioration_final}
         ])
 
         return results
@@ -91,8 +91,8 @@ class RobustnessCalculator:
 
                 # Handle Attack Success Rate (for targeted attacks)
                 if evaluation.is_targeted():
-                    name = "Da " + attackNameASR if AttackSuccessRate.adjustable else attackNameASR
-                    value = evalData.loc[evalData['Evaluation_Name'] == name, 'Value'].values
+                    imageNameASR = "Distance Adjusted " + attackNameASR if AttackSuccessRate.adjustable else attackNameASR
+                    value = evalData.loc[evalData['Evaluation_Name'] == imageNameASR, 'Value'].values
                     value = (value[0] if value.size > 0 else 0)
                     if attackSuccessRate <= value:
                         attackSuccessRate = value
@@ -100,15 +100,15 @@ class RobustnessCalculator:
 
                 # Handle Misclassification Rate (for untargeted attacks)
                 else:
-                    name = "Da " + attackNameMR if MisclassificationRate.adjustable else attackNameMR
-                    value = evalData.loc[evalData['Evaluation_Name'] == name, 'Value'].values
+                    imageNameMR = "Distance Adjusted " + attackNameMR if MisclassificationRate.adjustable else attackNameMR
+                    value = evalData.loc[evalData['Evaluation_Name'] == imageNameMR, 'Value'].values
                     value = (value[0] if value.size > 0 else 0)
                     if misclassificationRate <= value:
                         misclassificationRate = value
 
                 # Handle Attack Deterioration (for all attacks)
-                name = "Da " + attackNameAD if AttackDeterioration.adjustable else attackNameAD
-                value = evalData.loc[evalData['Evaluation_Name'] == name, 'Value'].values
+                imageNameAD = "Distance Adjusted " + attackNameAD if AttackDeterioration.adjustable else attackNameAD
+                value = evalData.loc[evalData['Evaluation_Name'] == imageNameAD, 'Value'].values
                 value = (value[0] if value.size > 0 else 0)
                 if attackDeterioration <= value:
                     attackDeterioration = value
@@ -121,9 +121,9 @@ class RobustnessCalculator:
 
             # Create pandas DataFrame with the **final values**
             results = pd.DataFrame([
-                {"Evaluation_Name": attackNameASR, "Value": attackSuccessRate_final},
-                {"Evaluation_Name": attackNameMR, "Value": misclassificationRate_final},
-                {"Evaluation_Name": attackNameAD, "Value": attackDeterioration_final}
+                {"Evaluation_Name": imageNameASR, "Value": attackSuccessRate_final},
+                {"Evaluation_Name": imageNameMR, "Value": misclassificationRate_final},
+                {"Evaluation_Name": imageNameAD, "Value": attackDeterioration_final}
             ])
 
             return results
