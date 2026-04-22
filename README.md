@@ -28,7 +28,7 @@ A JSON file containing the configuration for the adversarial perturbation method
 A JSON file specifying the categorical features in the dataset. The template can be found in [configuration/configuration_dataset.json](configuration/configuration_dataset.json), and an example can be found [here](https://github.com/msilva2002/AURORA-Realistic-Robustness-Evaluation/tree/main/configuration/config_data.json). The `*` wildcard can similarly be used to select all features sharing a common prefix.
 
 **3. Target file** *(required for targeted attacks only)*
-A CSV file specifying the target class for each sample, in order. An example can be found [here]https://github.com/msilva2002/AURORA-Realistic-Robustness-Evaluation/tree/main/configuration/target.csv).
+A CSV file specifying the target class for each sample, in order. An example can be found [here](https://github.com/msilva2002/AURORA-Realistic-Robustness-Evaluation/tree/main/configuration/target.csv).
 
 **Model**
 A model saved with `joblib` and ending with `.joblib` is required. If the model is not directly accessible, it can be queried remotely by adapting [src/repositories/query_repository.py](src/repositories/query_repository.py) to handle communication. Note that using a remote model disables white-box attack functionality, regardless of whether the model exposes gradients.
