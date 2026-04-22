@@ -1,0 +1,7 @@
+[
+    {
+    "categorical_features": [
+        {"name": "example_*"}
+    ]
+}
+]
