@@ -96,7 +96,7 @@ def get_art_classifier(model, dataset: pd.DataFrame, labels:pd.Series|None, **kw
 
         # Scikit-learn (catch-all for BaseEstimator)
         if isinstance(model, BaseEstimator):
-            return SklearnClassifier(model=model, **kwargs)
+            return SklearnClassifier(model=model)#, **kwargs)
 
         raise ValueError(f"Unsupported model type: {type(model)}")
 
@@ -108,8 +108,6 @@ def _get_number_labels(dataset: pd.DataFrame, labels: pd.Series|None) -> int:
         predictions = QueryService().predict(dataset)
         return len(set(predictions))
     
-import tensorflow as tf
-
 @staticmethod
 def _get_num_classes_tf(model: tf.keras.Model) -> int:
     output_layer = model.layers[-1]

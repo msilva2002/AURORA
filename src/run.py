@@ -133,5 +133,4 @@ if __name__ == "__main__":
                         del futures[f]
 
                 time.sleep(1)
-
     shell_controller.start_evaluation_sequence(modelData=modelData, perturbedDataList=results)

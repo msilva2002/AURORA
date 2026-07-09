@@ -5,10 +5,10 @@ import numpy as np
 from typing import List
 PENALTY = 10
 
-def get_penalty(original, categorical_features : List[str]):
-    threshold = calculate_threshold(original, categorical_features)
-    penalty = threshold * 0.1
-    return penalty    
+def get_penalty(original, categorical_features : List[str],normalization_params:dict):
+    threshold = calculate_threshold(original, categorical_features,normalization_params)
+    penalty = threshold * 0.1 * len(categorical_features)
+    return np.round(penalty,2) 
 
 def calculate_hamming_distance_one_row(p1, p2):
     p1 = np.atleast_1d(p1)
@@ -41,42 +41,58 @@ def calculate_hamming_distance(p1, p2, penalty):
     hamming_dist = hamming_dist*len(p1)
     return hamming_dist
 
-def calculate_euclidian_distance(p1, p2):
+def calculate_euclidean_distance(p1, p2, normalization=None, min_d = None, max_d = None):
+    if pd.isna(p1) or pd.isna(p2):
+        return 0
+    # Calculate raw distance
     if isinstance(p1, (int, float)) and isinstance(p2, (int, float)):
-        # Scalar version
-        return math.sqrt((p1 - p2) ** 2)
-    
+        distance = math.sqrt((p1 - p2) ** 2)
+
     elif isinstance(p1, pd.DataFrame) and isinstance(p2, pd.DataFrame):
-        # DataFrame version — element-wise
-        return ((p1 - p2) ** 2).map(math.sqrt)
+        distance = ((p1 - p2) ** 2).map(math.sqrt)
 
     else:
-        return math.sqrt((p1 - p2) ** 2)
+        #try:
+        distance = math.sqrt((p1 - p2) ** 2)
+        #except Exception as e:
+        #    print(f"Found {e}")
+        #    print(f"P1: {p1}")
+        #    print(f"P2: {p2}")
+        #    exit(-1)
+    if min_d is None and max_d is None:
+        return distance
     
-def calculate_distance(original, perturbed, categorical_features : List[str]):
+    if normalization == "minmax":
+        if isinstance(distance, pd.DataFrame):
+            return distance.apply(lambda col: (col - min_d) / (max_d - min_d) if max_d != min_d else 0.0)
+        return abs((distance - min_d) / (max_d - min_d) if max_d != min_d else 0.0)
+
+    raise ValueError(f"Unknown normalization: {normalization}")
+    
+def calculate_distance(original : pd.DataFrame, perturbed : pd.DataFrame, categorical_features : List[str], normalization_params : dict):
     perturbed.columns = original.columns
     distance = []
-    penalty = get_penalty(original, categorical_features)
+    penalty = get_penalty(original, categorical_features,normalization_params)
     for categorical in categorical_features:
         col_init = original[categorical].values
         col_pert = perturbed[categorical].values
 
         # List comprehension for speed
         dist = [calculate_hamming_distance(p1, p2, penalty) for p1, p2 in zip(col_init, col_pert)]
-        distance.append(np.median(sorted(dist)))
-
+        distance.append(np.median(dist))
+        #distance.append(sum(dist))
     numerical_features = list(set(original.columns) - {item for sublist in categorical_features for item in sublist})
 
     for numerical in numerical_features:
-
         col_init = original[numerical].values
         col_pert = perturbed[numerical].values
-        dist = [calculate_euclidian_distance(p1, p2) for p1, p2 in zip(col_init, col_pert)]
+        dist = [calculate_euclidean_distance(p1, p2, "minmax", normalization_params[numerical]["min"], normalization_params[numerical]["max"]) for p1, p2 in zip(col_init, col_pert)]
+        distance.append(np.nanmedian(dist))
+        #distance.append(sum(dist))
+        
+    return np.round(sum(distance),2)
 
-        distance.append(np.median(sorted(dist)))
-    return sum(distance)
-
-def calculate_threshold(original, categorical_features : List[str]):
+def calculate_threshold(original, categorical_features : List[str],normalization_params):
     threshold = 0
     for categorical in categorical_features:
         threshold += 2
@@ -84,12 +100,16 @@ def calculate_threshold(original, categorical_features : List[str]):
     numerical_features = list(set(original.columns) - {item for sublist in categorical_features for item in sublist})
 
     for numerical in numerical_features:
-       median_value = original[numerical].median()
-       # add the absolute value of the median to the threshold
-       threshold += abs(median_value)
+        normalized_p1 = original[numerical].copy()
+        min_val = normalization_params[numerical]["min"]
+        max_val = normalization_params[numerical]["max"]
+        normalized_p1 = (original[numerical] - min_val) / (max_val - min_val)
+        #median_value = original[numerical].median()
+        #  add the absolute value of the median to the threshold
+        threshold += np.abs(normalized_p1).median()
 
     if threshold < 0:
         threshold = 0
 
-    return threshold
+    return np.round(threshold,2)
 

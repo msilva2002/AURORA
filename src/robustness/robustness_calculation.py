@@ -23,6 +23,9 @@ class RobustnessCalculator:
         misclassificationRate = []
         attackDeterioration = []
 
+        imageNameMR = None
+        imageNameASR = None
+
         for evaluation in evaluationList:
             evalData = evaluation.get_evaluation()
 
@@ -51,19 +54,19 @@ class RobustnessCalculator:
         if not attackDeterioration:
             attackDeterioration = [0]
 
-        # Compute averages
+         # Compute averages
         attack_success_rate_avg = sum(attackSuccessRate) / len(attackSuccessRate)
         misclassification_rate_avg = sum(misclassificationRate) / len(misclassificationRate)
         attack_deterioration_avg = sum(attackDeterioration) / len(attackDeterioration)
 
         # Calculate final robustness metrics
-        attackSuccessRate_final = round(100 - attack_success_rate_avg * 100, 2)
-        misclassificationRate_final = round(100 - misclassification_rate_avg * 100, 2)
-        attackDeterioration_final = round(100 - attack_deterioration_avg * 100, 2)
+        attackSuccessRate_final = round(100 - (attack_success_rate_avg * 100), 2)
+        misclassificationRate_final = round(100 - (misclassification_rate_avg * 100), 2)
+        attackDeterioration_final = round(100 - (attack_deterioration_avg * 100), 2)
 
         # Create pandas DataFrame with the **final values**
         results = pd.DataFrame([
-            {"Evaluation_Name": imageNameASR, "Value": attackSuccessRate_final},
+            {"Evaluation_Name": imageNameASR if imageNameASR != None else "Attack Success Rate", "Value": attackSuccessRate_final},
             {"Evaluation_Name": imageNameMR, "Value": misclassificationRate_final},
             {"Evaluation_Name": imageNameAD, "Value": attackDeterioration_final}
         ])
@@ -86,6 +89,7 @@ class RobustnessCalculator:
             misclassificationRate = 0
             attackDeterioration = 0
 
+            imageNameASR = None
             for evaluation in evaluationList:
                 evalData = evaluation.get_evaluation()
 
@@ -121,7 +125,7 @@ class RobustnessCalculator:
 
             # Create pandas DataFrame with the **final values**
             results = pd.DataFrame([
-                {"Evaluation_Name": imageNameASR, "Value": attackSuccessRate_final},
+                {"Evaluation_Name": imageNameASR if imageNameASR != None else "Attack Success Rate", "Value": attackSuccessRate_final},
                 {"Evaluation_Name": imageNameMR, "Value": misclassificationRate_final},
                 {"Evaluation_Name": imageNameAD, "Value": attackDeterioration_final}
             ])

@@ -14,10 +14,21 @@ def adjust_metrics(evalData : EvaluationData, evalClasses, modelData : ModelData
     categorical = modelData.get_config()
     # get the successful adversarial samples
     df_init_successful, df_perturbed_successful = get_successful_adversarial_samples(original_df, perturbed_df, evalData.get_predicted_clean_labels(), evalData.get_predicted_perturbed_labels())
-    distance_perturbation = calculate_distance(original=df_init_successful, perturbed=df_perturbed_successful, categorical_features=categorical)
-    threshold = calculate_threshold(original=df_init_successful, categorical_features=categorical)
-    adjustment = calculate_adjustment(distance_perturbation, threshold)
+    if len(df_init_successful) == 0:
+        return evalData
     
+    numerical_features = list(set(original_df.columns) - {item for sublist in categorical for item in sublist})
+    norm_params = {
+    col: {
+        "min": original_df[col].min(),
+        "max": original_df[col].max()
+        }
+        for col in numerical_features
+    }
+
+    distance_perturbation = calculate_distance(original=df_init_successful, perturbed=df_perturbed_successful, categorical_features=categorical, normalization_params=norm_params)
+    threshold = calculate_threshold(original=df_init_successful, categorical_features=categorical, normalization_params=norm_params)
+    adjustment = calculate_adjustment(distance_perturbation, threshold)    
 
     for evalClass in evalClasses:
         if evalClass.adjustable == True:

@@ -91,14 +91,32 @@ class ReportCreator:
             from utils.utils import get_successful_adversarial_samples
             df_init_successful, df_perturbed_successful = get_successful_adversarial_samples(df_init=df_init, df_pert=df_pert, y_init=eval.get_predicted_clean_labels(), y_pert=eval.get_predicted_perturbed_labels())
 
+
+            numerical_features = list(set(df_init.columns) - {item for sublist in categorical for item in sublist})
+
+            norm_params = {
+            col: {
+                "min": df_init[col].min(),
+                "max": df_init[col].max()
+                }
+                for col in numerical_features
+            }
+
             #threshold = calculate_threshold(df_init, categorical)
 
-            threshold = calculate_threshold(df_init_successful, categorical)
+            threshold = calculate_threshold(df_init_successful, categorical, norm_params)
             
 
+            distance = calculate_distance(df_init_successful, df_perturbed_successful, categorical, norm_params)
+            penalty = get_penalty(df_init_successful, categorical, norm_params)
 
-            distance = calculate_distance(df_init_successful, df_perturbed_successful, categorical)
-            penalty = get_penalty(df_init_successful, categorical)
+            import numpy as np
+            if np.isnan(distance):
+                distance = 0.0
+            if np.isnan(threshold):
+                threshold = 0.0
+            if np.isnan(penalty):
+                penalty = 0.0
 
             line += f" {distance} | {threshold} | {penalty} |"
 
@@ -127,10 +145,10 @@ class ReportCreator:
         robustness_eval = []
         robustness_eval.append("## Robustness Evaluation")
 
-        robustness_eval.append("80-100: Very robust.\n")
-        robustness_eval.append("60-80: Robust.\n")
-        robustness_eval.append("40-60: Moderately robust.\n")
-        robustness_eval.append("20-40: Weakly robust.\n")
+        robustness_eval.append("81-100: Very robust.\n")
+        robustness_eval.append("61-80: Robust.\n")
+        robustness_eval.append("41-60: Moderately robust.\n")
+        robustness_eval.append("21-40: Weakly robust.\n")
         robustness_eval.append("0-20: Not robust.\n")
 
         robustnessCalculator = RobustnessCalculator()
@@ -142,7 +160,13 @@ class ReportCreator:
         
         robustAvg = sum(robustness["Value"]) / len(robustness["Value"])
         robustAvg = int(round(float(robustAvg), 0))
-        robustness_eval.append(f"###### Robustness score: {robustAvg}")
+
+        thresholds_robustness = [0, 21, 41, 61, 81]
+        labels_robustness = ["Not robust.", "Weakly robust.", "Moderately robust.", "Robust.", "Very robust."]
+        import bisect
+        idx = bisect.bisect_right(thresholds_robustness, robustAvg) - 1
+        robustness_label = labels_robustness[idx]
+        robustness_eval.append(f"###### Robustness score: {robustAvg} - {robustness_label}")
 
         robustness_eval.append("---\n")
 
@@ -154,7 +178,9 @@ class ReportCreator:
 
         robustAvg = sum(robustness["Value"]) / len(robustness["Value"])
         robustAvg = round(float(robustAvg), 0)
-        robustness_eval.append(f"###### Robustness score worst case scenario: {robustAvg}")
+        idx = bisect.bisect_right(thresholds_robustness, robustAvg) - 1
+        robustness_label = labels_robustness[idx]
+        robustness_eval.append(f"###### Robustness score worst case scenario: {robustAvg} - {robustness_label}")
 
         attack_specific = []
         for eval in evalList:
