@@ -10,13 +10,15 @@ warnings.filterwarnings("ignore")
 warnings.filterwarnings("ignore", category=UserWarning)
 import logging
 logging.getLogger("lightgbm").setLevel(logging.CRITICAL)
-
+from xgboost import XGBClassifier, XGBRegressor
 import os
 os.environ["GRPC_VERBOSITY"] = "ERROR"
 os.environ["GLOG_minloglevel"] = "2"
 
 class ModelData:
     def __init__(self, dataset, model, target=None, label=None, data_config=None):
+        if isinstance(model, (XGBClassifier, XGBRegressor)):
+            model.get_booster().feature_names = None
         self.model = model
         self.data_config = data_config
         self.labels, self.dataset = self._get_labels(dataset=dataset, feature_label=label)

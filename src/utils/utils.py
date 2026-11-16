@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def get_features(df, selected_features):
     # check if the selected features have a "*" in them
@@ -30,7 +31,7 @@ def get_successful_adversarial_samples(df_init, df_pert, y_init: pd.DataFrame, y
     # and if the row in df_init is the same as the row in df_pert
     # We can use the index of the dataframe to check if the rows are the same
     
-    mask = (y_init != y_pert).squeeze()
+    mask = np.atleast_1d((y_init != y_pert).squeeze())
 
     # Get the indices where labels have changed
     changed_index = df_init.index[mask]
@@ -44,6 +45,9 @@ def apply_constraints(data, categorical_features, integer_features):
         patterns = categorical_features.split(",") if isinstance(categorical_features, str) else categorical_features
         for pattern in patterns:
             cols = get_features(data, pattern)
+
+            if not cols:
+                continue
             numeric_group = data[cols].apply(lambda col: pd.to_numeric(col, errors='coerce'))
             numeric_group = numeric_group.fillna(0)
             

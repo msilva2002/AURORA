@@ -5,7 +5,6 @@ from distances.distance_calculator import calculate_distance, calculate_threshol
 from utils.utils import get_successful_adversarial_samples
 
 def adjust_metrics(evalData : EvaluationData, evalClasses, modelData : ModelData):  
-
     eval_df = evalData.get_evaluation()
     original_df = modelData.get_dataset()
     original_df.columns = modelData.get_columns()

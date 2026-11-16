@@ -3,7 +3,6 @@ import math
 import pandas as pd
 import numpy as np
 from typing import List
-PENALTY = 10
 
 def get_penalty(original, categorical_features : List[str],normalization_params:dict):
     threshold = calculate_threshold(original, categorical_features,normalization_params)
@@ -24,21 +23,33 @@ def calculate_hamming_distance(p1, p2, penalty):
 
     p1 = np.atleast_1d(p1)
     p2 = np.atleast_1d(p2)
+
+    #print(f"P1: {p1}")
+    #print(f"P2: {p2}")
+    #print(f"Penalty: {penalty}")
     
     hamming_dist = hamming(p1, p2)
 
+    #print(hamming_dist)
+
     # assuming p2 is always the perturbed
     invalid_count = sum((x not in {0, 1}) for x in p2)
+    #print(f"Invalid 1: {invalid_count}")
     hamming_dist += invalid_count * penalty
 
     invalid_count = int(sum(x != 0 for x in p2) > 1)
+    #print(f"Invalid 2: {invalid_count}")
     hamming_dist += invalid_count * penalty
 
     invalid_count = max(0, all(x == 0 for x in p2))
+    #print(f"Invalid 3: {invalid_count}")
     hamming_dist += invalid_count * penalty
 
+    #print(hamming_dist)
     # normalization
     hamming_dist = hamming_dist*len(p1)
+    #print(hamming_dist)
+
     return hamming_dist
 
 def calculate_euclidean_distance(p1, p2, normalization=None, min_d = None, max_d = None):
@@ -96,7 +107,7 @@ def calculate_threshold(original, categorical_features : List[str],normalization
     threshold = 0
     for categorical in categorical_features:
         threshold += 2
-
+    #print(f"Threshold 1: {threshold}")
     numerical_features = list(set(original.columns) - {item for sublist in categorical_features for item in sublist})
 
     for numerical in numerical_features:
@@ -106,7 +117,12 @@ def calculate_threshold(original, categorical_features : List[str],normalization
         normalized_p1 = (original[numerical] - min_val) / (max_val - min_val)
         #median_value = original[numerical].median()
         #  add the absolute value of the median to the threshold
-        threshold += np.abs(normalized_p1).median()
+        tmp_threshold = np.abs(normalized_p1).median()
+        #print(tmp_threshold)
+        #print(type(tmp_threshold))
+        if not np.isnan(tmp_threshold):
+            threshold += tmp_threshold
+        #print(f"Threshold 2+: {threshold}")
 
     if threshold < 0:
         threshold = 0

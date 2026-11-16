@@ -3,6 +3,7 @@ from domain_data.perturbed_data import PerturbedData
 from domain_data.evaluation_data import EvaluationData
 from distances.metric_adjuster import adjust_metrics
 from utils.revert_changes import revert_changes_df
+import pandas as pd
 
 class ExecuteEvaluationService:
     def __init__(self, evaluationClasses, modelData:ModelData):
@@ -25,27 +26,6 @@ class ExecuteEvaluationService:
             evaluation_data = adjust_metrics(evaluation_data, self.evaluationClasses, modelData)
             return evaluation_data
         return None
-
-    #def execute(self, modelData: ModelData, perturbedData_list:List[PerturbedData])->List[EvaluationData]:
-    #    for perturbedData in perturbedData_list:
-    #        if perturbedData.error == False:
-    #            evaluation_data : EvaluationData = self._create_evaluation(modelData, perturbedData)
-    #            for evaluationClass in self.evaluationClasses:
-    #                evaluation_data = evaluationClass().execute(evaluation_data)
-    #            self.statusManager.update_evaluate(perturbedData.attackName, evaluation_data.get_evaluation())
-
-
-    #def execute(self, modelData: ModelData, perturbedData_list:List[PerturbedData])->List[EvaluationData]:
-        #evaluation_data_list : List[EvaluationData] = []
-    #    for perturbedData in perturbedData_list:
-    #        if perturbedData.error == False:
-    #            evaluation_data : EvaluationData = self._create_evaluation(modelData, perturbedData)
-    #            for evaluationClass in self.evaluationClasses:
-    #                evaluation_data = evaluationClass().execute(evaluation_data)
-    #            self.statusManager.update_evaluate(perturbedData.attackName, evaluation_data.get_evaluation())
-                #evaluation_data_list.append(evaluation_data)
-        #return evaluation_data_list
-    
     def _create_evaluation(self, modelData: ModelData, perturbedData : PerturbedData) -> EvaluationData:
         model = modelData.get_model()
         columns = modelData.get_columns()

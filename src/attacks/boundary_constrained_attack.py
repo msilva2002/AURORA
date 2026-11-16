@@ -19,13 +19,13 @@ class BoundaryConstrainedAttack:
         try:
             categorical_features = config.get("categorical_features", None)
             integer_features = config.get("integer_features", None)
-            data = data.compute().to_numpy()
+            data_np = (data.copy()).compute().to_numpy()
             config = {k: v for k, v in config.items() if k not in ['categorical_features', 'integer_features']}
             attack = BoundaryAttack(estimator=model, targeted=False, verbose=False, **config )
             start = time.time()
-            adversarial_data = attack.generate(x=data)
+            adversarial_data = attack.generate(x=data_np)
             adversarial_data = pd.DataFrame(adversarial_data, columns=columns)
-            data = modeldata.get_dataset().persist()
+            #data = modeldata.get_dataset().persist()
             data.columns = columns
             adversarial_data = revert_deleted_rows(data.compute(), adversarial_data)
             adversarial_data = apply_constraints(adversarial_data, categorical_features, integer_features)
