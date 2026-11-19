@@ -208,31 +208,40 @@ class ReportCreator:
                 row = "| " + labels[i] + " | " + " | ".join([str(metric_value[i][j]) for j in range(num_classes)]) + " |"
                 attack_specific.append(row)
 
-            attack_specific.append(f"#### Variation between each value within the categorical features\n")
             #markdown_lines.append("The following images show the variation between each value within the categorical features. A higher value indicates a higher rate of modification of the value, while a lower value indicates a lower rate of modification of the value.\nThe total sum between all the values for a categorical feature should be always less or equal to the number of rows in the dataset. If this is not true, then the method for generating the perturbations does not aqquaint for categorical features logic and can change values at will.\n") 
             listImages = ImportRepository().get_png_from_folder(IMAGE_FOLDER , "independent_categorical_feature_" + eval.get_perturbedData().attackName+"_")
-            for image in listImages:
-                attack_specific.append(f"![{image}]({image})")
-                attack_specific.append("---\n")
+            if listImages:
+                attack_specific.append(f"#### Variation between each value within the categorical features\n")
+                for image in listImages:
+                    attack_specific.append(f"![{image}]({image})")
+                    attack_specific.append("---\n")
 
-            attack_specific.append(f"### Comparison of Normal and Perturbed Results for Categorical Features\n")
+            
             #text = "A red line indicates that atleast one of the values is not possible for the categorical feature, by either not being 0 or 1. A black line indicates that the value is possible for the categorical feature.\nThe average values and the value count should have a proportional representation, meaning that if the average value is 0,5, then the value count should be 50% of the total number of rows in the dataset. If this is not true, then the method for generating the perturbations does not aqquaint for categorical features logic and can change values at will. The total sum of value counts should be less or equal to the number of rows in the dataset.\n"
             #markdown_lines.append(text)
             listImagesOriginal = ImportRepository().get_png_from_folder(IMAGE_FOLDER , "original_category_")
             listImagesPerturbed = ImportRepository().get_png_from_folder(IMAGE_FOLDER , "perturbed_category_" + eval.get_perturbedData().attackName+"_")
-            for i in range(len(listImagesOriginal)):
-                attack_specific.append("Original data")
-                attack_specific.append(f"![{listImagesOriginal[i]}]({listImagesOriginal[i]})\n")
-                attack_specific.append("Perturbed data")
-                attack_specific.append(f"![{listImagesPerturbed[i]}]({listImagesPerturbed[i]})")
-                attack_specific.append("---\n")
-            
-            attack_specific.append(f"### Comparison of Normal and Perturbed Results for Numerical Features\n")
+            if listImagesPerturbed:
+                attack_specific.append(f"#### Comparison of Normal and Perturbed Results for Categorical Features\n")
+                for i in range(len(listImagesOriginal)):
+                    attack_specific.append("Original data")
+                    attack_specific.append(f"![{listImagesOriginal[i]}]({listImagesOriginal[i]})\n")
+                    attack_specific.append("Perturbed data")
+                    attack_specific.append(f"![{listImagesPerturbed[i]}]({listImagesPerturbed[i]})")
+                    attack_specific.append("---\n")
+                
             #text = "The values shown represent the scaled difference of values for each numerical feature. If a number appears on the top left corner, it means that the value if on that scale (for example, 1e-6 means 0.000001).\n"
             #attack_specific.append(text)
-            listImages = ImportRepository().get_png_from_folder(IMAGE_FOLDER, "numerical_features_" + eval.get_perturbedData().attackName+".")
-            for image in listImages:
-                attack_specific.append(f"![{image}]({image})\n")
+            listImagesOriginal = ImportRepository().get_png_from_folder(IMAGE_FOLDER , "numerical_features_original")
+            listImages = ImportRepository().get_png_from_folder(IMAGE_FOLDER, "numerical_features_perturbed_" + eval.get_perturbedData().attackName+".")
+            if listImages:
+                attack_specific.append(f"#### Comparison of Normal and Perturbed Results for Numerical Features\n")
+                for i in range(len(listImages)):
+                    attack_specific.append("Original data")
+                    attack_specific.append(f"![{listImagesOriginal[i]}]({listImagesOriginal[i]})\n")
+                    attack_specific.append("Perturbed data")
+                    attack_specific.append(f"![{listImages[i]}]({listImages[i]})")
+                    attack_specific.append("---\n")
 
         markdown_lines = results_table + robustness_eval + attack_specific
         if ExportRepository().export_md(markdown_lines, REPORT_NAME):

@@ -11,6 +11,9 @@ from math import pi
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import textwrap
+ORIG_COLOR = 'tab:blue'
+PERT_COLOR = 'green'
+from matplotlib.ticker import MaxNLocator
 
 class ImageGenerator:
     def __init__(self, folder_path: str):
@@ -261,8 +264,10 @@ class ImageGenerator:
         df_pert = df_pert[remaining_columns]
 
         # standard scaler to compare the mean
-        figure = self.create_numerical_plot(df_init, df_pert, "Mean standardized values changed for numerical features")
-        ExportRepository().export_plot(figure, self.folder_path + "numerical_features_" + evalData.get_perturbedData().attackName + ".png")
+        #figure = self.create_numerical_plot(df_init, df_pert, "Mean standardized values changed for numerical features")
+        figure_o, figure_p = self.create_numerical_radar_pair(df_init, df_pert, evalData.get_perturbedData().attackName)
+        ExportRepository().export_plot(figure_o, self.folder_path + "numerical_features_original_"+ evalData.get_perturbedData().attackName + ".png")
+        ExportRepository().export_plot(figure_p, self.folder_path + "numerical_features_perturbed_" + evalData.get_perturbedData().attackName + ".png")
 
 
     def create_numerical_plot(self,df_init, df_perturbed, title):
@@ -315,3 +320,163 @@ class ImageGenerator:
         plt.title(title, fontsize=20)
         #plt.show()
         return fig
+
+
+
+    def _style_polar(self, ax, angles):
+        ax.set_theta_offset(pi / 2)
+        ax.set_theta_direction(-1)
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels([])                      # labels are placed by _place_labels
+        ax.xaxis.grid(True, color='grey', alpha=0.4)
+        ax.yaxis.grid(True, color='grey', alpha=0.4)
+
+
+    def _compute_limits(self, values, zoom=False):
+        """
+        Work out the radial axis for a set of values. Returns (lo, hi, inner_ticks).
+
+        zoom=False : always include the 0-1 ring (the original range), grow if values leave it.
+        zoom=True  : fit the axis to the data, so small values (e.g. means of skewed
+                    features, which sit close to 0 after min-max scaling) fill the plot.
+        """
+        vals = np.asarray(values, dtype=float)
+        lo = min(0.0, np.nanmin(vals))
+        hi = np.nanmax(vals) if zoom else max(1.0, np.nanmax(vals))
+        if hi <= lo:
+            hi = lo + 1.0
+        if zoom:
+            hi += 0.05 * (hi - lo)                  # a little headroom
+        ticks = MaxNLocator(nbins=5).tick_values(lo, hi)
+        return float(ticks[0]), float(ticks[-1]), ticks[ticks > ticks[0]]
+
+    def _apply_limits(self, ax, lims):
+        """Apply limits from _compute_limits to an axis; returns (lo, hi)."""
+        lo, hi, inner = lims
+        ax.set_ylim(lo, hi)
+        ax.set_rgrids(inner, labels=[f"{t:.3g}" for t in inner], fontsize=9)
+        return lo, hi
+
+    def _place_labels(self, ax, angles, features, details, lims, pad=0.12, fontsize=16, width=15):
+        """
+        Put the feature labels outside the circle, anchored so the text always grows
+        AWAY from the plot (left-aligned on the right side, right-aligned on the left side),
+        instead of using the default tick labels that overlap the circle.
+        `pad` is the gap between the outer ring and the label, as a fraction of the radius.
+        """
+        lo, hi = lims
+        r = hi + pad * (hi - lo)
+        for ang, f, d in zip(angles[:-1], features, details):
+            name = '\n'.join(textwrap.wrap(f, width=width))
+            s, c = np.sin(ang), np.cos(ang)         # screen direction (theta=0 at top, clockwise)
+            ha = 'left' if s > 0.25 else 'right' if s < -0.25 else 'center'
+            va = 'bottom' if c > 0.25 else 'top' if c < -0.25 else 'center'
+            ax.text(ang, r, f"{name}\n({d})", ha=ha, va=va, fontsize=fontsize,
+                    clip_on=False, linespacing=1.2)
+
+    def _fmt(self, v):
+        """Compact number formatting for tick labels."""
+        a = abs(v)
+        if a == 0:
+            return "0"
+        if a >= 1e4 or a < 1e-2:
+            return f"{v:.1e}"
+        if a >= 100:
+            return f"{v:.0f}"
+        return f"{v:.2f}"
+
+
+    def _radar_single(self, name, df, st, color, features, angles, L1, L2, L3, third_panel):
+        """One 3-panel radar figure for a single dataset, using shared limits L1/L2/L3."""
+        def close(v):
+            return list(v) + list(v)[:1]
+
+        fig, axes = plt.subplots(1, 3, figsize=(32, 11), subplot_kw={'projection': 'polar'})
+
+        # ---- panel 1: min / max band -------------------------------------------
+        ax = axes[0]
+        self._style_polar(ax, angles)
+        mn, mx = close(st['min']), close(st['max'])
+        ax.fill_between(angles, mn, mx, color=color, alpha=0.2, zorder=2)
+        ax.plot(angles, mx, color=color, lw=1.3)
+        ax.plot(angles, mn, color=color, lw=1.3)
+        ax.set_title("Min and Max Values", fontsize=22, pad=95)
+        lims = self._apply_limits(ax, L1)
+        self._place_labels(ax, angles, features,
+                    [f"{self._fmt(a)} / {self._fmt(b)}" for a, b in zip(df.max(), df.min())], lims)
+
+        # ---- panel 2: mean -------------------------------------------------------
+        ax = axes[1]
+        self._style_polar(ax, angles)
+        vals = close(st['mean'])
+        ax.plot(angles, vals, color=color, lw=1.3, zorder=4)
+        ax.fill(angles, vals, color=color, alpha=0.2, zorder=3)
+        ax.set_title("Average Values", fontsize=22, pad=95)
+        lims = self._apply_limits(ax, L2)
+        self._place_labels(ax, angles, features, [self._fmt(v) for v in df.mean()], lims)
+
+        # ---- panel 3: spread (std) or non-zero share ----------------------------
+        ax = axes[2]
+        self._style_polar(ax, angles)
+        if third_panel == 'nonzero':
+            vals, title, details = close(st['nonzero']), "% Non-zero Values", \
+                [f"{v:.0f}%" for v in st['nonzero']]
+        else:
+            vals, title, details = close(st['std']), "Standard Deviation", \
+                [self._fmt(v) for v in df.std()]
+        ax.plot(angles, vals, color=color, lw=1.3, zorder=4)
+        ax.fill(angles, vals, color=color, alpha=0.2, zorder=3)
+        ax.set_title(title, fontsize=22, pad=95)
+        lims = self._apply_limits(ax, L3)
+        self._place_labels(ax, angles, features, details, lims)
+
+        fig.suptitle(f"{name} data", fontsize=28, y=0.98)
+        fig.text(0.5, 0.03, "Radial axes are scaled to the original min-max range and are identical in the "
+                            "original and perturbed images. Labels show the real values.",
+                ha='center', fontsize=14, color='grey')
+        fig.subplots_adjust(left=0.06, right=0.94, top=0.80, bottom=0.10, wspace=0.75)
+        return fig
+
+    def create_numerical_radar_pair(self, df_init: pd.DataFrame, df_pert: pd.DataFrame, title, third_panel='std'):
+        """
+        Returns (fig_original, fig_perturbed): the same three radar panels for each dataset.
+
+        third_panel='std'      standard deviation (spread)
+        third_panel='nonzero'  % of non-zero values (like the "value counts" of the categorical plots)
+
+        Both figures use the SAME radial limits (computed from both datasets together),
+        so they can be compared directly side by side.
+        """
+        features = list(df_init.columns)
+        df_init = df_init.astype(float)
+        df_pert = df_pert[features].astype(float)
+
+        n = len(features)
+        angles = np.linspace(0, 2 * np.pi, n, endpoint=False).tolist()
+        angles += angles[:1]
+
+        lo = df_init.min()
+        span = (df_init.max() - lo).replace(0, 1.0)
+
+        def stats(df):
+            return {
+                'min': ((df.min() - lo) / span).tolist(),
+                'max': ((df.max() - lo) / span).tolist(),
+                'mean': ((df.mean() - lo) / span).tolist(),
+                'std': (df.std() / span).tolist(),
+                'nonzero': ((df != 0).mean() * 100).tolist(),
+            }
+
+        so, sp = stats(df_init), stats(df_pert)
+
+        L1 = self._compute_limits(so['min'] + so['max'] + sp['min'] + sp['max'])
+        L2 = self._compute_limits(so['mean'] + sp['mean'], zoom=True)
+        if third_panel == 'nonzero':
+            L3 = (0.0, 100.0, np.array([20, 40, 60, 80, 100]))
+        else:
+            L3 = self._compute_limits(so['std'] + sp['std'], zoom=True)
+
+        fig_o = self._radar_single("Original", df_init, so, ORIG_COLOR, features, angles, L1, L2, L3, third_panel)
+        fig_p = self._radar_single(title, df_pert, sp, PERT_COLOR, features, angles, L1, L2, L3, third_panel)
+
+        return fig_o, fig_p
